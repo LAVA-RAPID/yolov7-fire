@@ -24,6 +24,6 @@ COPY utils/ /app/utils
 COPY models/ /app/models
 COPY app.py /app/
 
-ADD https://github.com/giorgio-tran/fire/releases/download/yolov7/yolov7-fire.pt /app/model.pt
+RUN wget https://github.com/giorgio-tran/fire/releases/download/yolov7/yolov7-fire.pt
 
 ENTRYPOINT ["python3", "-u", "/app/app.py"]

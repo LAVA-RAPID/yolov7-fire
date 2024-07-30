@@ -120,14 +120,6 @@ def parse_args():
     parser.add_argument('-output-dir', type=str, default='output', help='directory to save output frames')
     return parser.parse_args()
 
-def load_class_names(namesfile):
-    class_names = []
-    with open(namesfile, 'r') as f:
-        for line in f:
-            class_names.append(line.strip())
-    return class_names
-
 if __name__ == '__main__':
     args = parse_args()
-    args.names = load_class_names(args.names)
     process_input(args)
