@@ -24,6 +24,6 @@ COPY utils/ /app/utils
 COPY models/ /app/models
 COPY app.py /app/
 
-RUN curl -L -o /app/yolov7-fire.pt "https://www.dropbox.com/scl/fi/xpd8csggkeord32tikm1d/yolov7-fire.pt?rlkey=vqxnlprl07mf3z3j22hm2flci&st=89hfrg0f&dl=1"
+RUN curl -L -o /app/yolov7-fire.pt "https://www.dropbox.com/scl/fi/g843zo26x2u27fm09irt7/best.pt?rlkey=8ijy7pxme9cpgfpxqk9swwyvo&st=9ulyplea&dl=1"
 
 ENTRYPOINT ["python3", "-u", "/app/app.py"]
