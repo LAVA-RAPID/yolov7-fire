@@ -13,6 +13,8 @@ from models.experimental import Ensemble
 from models.common import Conv, DWConv
 from utils.general import non_max_suppression, apply_classifier
 
+from waggle.plugin import Plugin
+
 class YOLOv7_Main():
     def __init__(self, args, weightfile):
         self.use_cuda = torch.cuda.is_available()
@@ -52,7 +54,8 @@ class YOLOv7_Main():
 
         return pred
 
-def process_input(args):
+def run(args):
+  with Plugin() as plugin:
     yolo = YOLOv7_Main(args)
 
     if args.input.lower() == 'camera':
@@ -109,7 +112,7 @@ def process_input(args):
 
     cap.release()
     cv2.destroyAllWindows()
-    print(f"Processing complete. {frame_count} frames saved in {args.output_dir}")
+    plugin.publish("log", f"Processing complete. {frame_count} frames saved in {args.output_dir}")
 
 def parse_args():
     parser = argparse.ArgumentParser(description='YOLO v7 Detection')
@@ -120,9 +123,7 @@ def parse_args():
     parser.add_argument('-output-dir', type=str, default='output', help='directory to save output frames')
     return parser.parse_args()
   
-def run():
-  
 
 if __name__ == '__main__':
     args = parse_args()
-    process_input(args)
+    run(args)
