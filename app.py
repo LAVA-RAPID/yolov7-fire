@@ -116,7 +116,7 @@ def run(args):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='YOLO v7 Detection')
-    parser.add_argument('-weight', type=str, default='yolov7.pt', help='model.pt path(s)')
+    parser.add_argument('-weight', type=str, default='yolov7-fire.pt', help='model.pt path(s)')
     parser.add_argument('-input', type=str, default='camera', help='source (camera/url/video file path)')
     parser.add_argument('-conf-thres', type=float, default=0.25, help='object confidence threshold')
     parser.add_argument('-iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
