@@ -119,6 +119,9 @@ def parse_args():
     parser.add_argument('-iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
     parser.add_argument('-output-dir', type=str, default='output', help='directory to save output frames')
     return parser.parse_args()
+  
+def run():
+  
 
 if __name__ == '__main__':
     args = parse_args()
