@@ -45,7 +45,7 @@ RUN curl -L -o /app/yolov7_fire_am "https://www.dropbox.com/scl/fi/5vkamze3fgjuq
 RUN curl -L -o /app/yolov7_fire_an "https://www.dropbox.com/scl/fi/q2sxpcsdevpalti53f6b5/best_part_an?rlkey=jca0mvau6llv8e4oejz5t6heo&st=4jxvvrei&dl=1"
 RUN curl -L -o /app/yolov7_fire_ao "https://www.dropbox.com/scl/fi/ep6m2jnhbp2wicvq1jy2s/best_part_ao?rlkey=apxxqht912box0sne42qa9ze9&st=adb8pct3&dl=1"
 
-RUN cat yolov7_fire_* > yolov7-fire.pt
+RUN cat /app/yolov7_fire_* > /app/yolov7-fire.pt
 
 # RUN curl -L -o /app/model.pt "https://web.lcrc.anl.gov/public/waggle/models/vehicletracking/yolov7.pt"
 
