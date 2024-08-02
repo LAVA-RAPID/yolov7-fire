@@ -56,7 +56,7 @@ class YOLOv7_Main():
 
 def run(args):
   with Plugin() as plugin:
-    yolo = YOLOv7_Main(args)
+    yolo = YOLOv7_Main(args, args.weight)
 
     if args.input.lower() == 'camera':
         cap = cv2.VideoCapture(0)
