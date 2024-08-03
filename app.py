@@ -57,63 +57,63 @@ class YOLOv7_Main():
 def run(args):
   with Plugin() as plugin:
     plugin.publish("log", "Starting YOLOv7 Fire Detection")
-    yolo = YOLOv7_Main(args, args.weight)
+    # yolo = YOLOv7_Main(args, args.weight)
 
-    if args.input.lower() == 'camera':
-        cap = cv2.VideoCapture(0)
-    elif args.input.startswith(('http://', 'https://', 'rtsp://')):
-        cap = cv2.VideoCapture(args.input)
-    else:
-        if not os.path.isfile(args.input):
-            print(f"Error: File '{args.input}' does not exist.")
-            return
-        cap = cv2.VideoCapture(args.input)
+    # if args.input.lower() == 'camera':
+    #     cap = cv2.VideoCapture(0)
+    # elif args.input.startswith(('http://', 'https://', 'rtsp://')):
+    #     cap = cv2.VideoCapture(args.input)
+    # else:
+    #     if not os.path.isfile(args.input):
+    #         print(f"Error: File '{args.input}' does not exist.")
+    #         return
+    #     cap = cv2.VideoCapture(args.input)
 
-    if not cap.isOpened():
-        print("Error: Could not open video source.")
-        return
+    # if not cap.isOpened():
+    #     print("Error: Could not open video source.")
+    #     return
 
-    # Create output directory if it doesn't exist
-    os.makedirs(args.output_dir, exist_ok=True)
+    # # Create output directory if it doesn't exist
+    # os.makedirs(args.output_dir, exist_ok=True)
 
-    frame_count = 0
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+    # frame_count = 0
+    # while True:
+    #     ret, frame = cap.read()
+    #     if not ret:
+    #         break
 
-        frame_count += 1
-        results = yolo.run(frame, args)
+    #     frame_count += 1
+    #     results = yolo.run(frame, args)
 
-        # Process results (e.g., draw bounding boxes)
-        detections = []
-        for det in results:
-            if len(det):
-                for *xyxy, conf, cls in reversed(det):
-                    label = f'{args.names[int(cls)]} {conf:.2f}'
-                    cv2.rectangle(frame, (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3])), (255, 0, 0), 2)
-                    cv2.putText(frame, label, (int(xyxy[0]), int(xyxy[1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-                    detections.append(label)
+    #     # Process results (e.g., draw bounding boxes)
+    #     detections = []
+    #     for det in results:
+    #         if len(det):
+    #             for *xyxy, conf, cls in reversed(det):
+    #                 label = f'{args.names[int(cls)]} {conf:.2f}'
+    #                 cv2.rectangle(frame, (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3])), (255, 0, 0), 2)
+    #                 cv2.putText(frame, label, (int(xyxy[0]), int(xyxy[1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+    #                 detections.append(label)
 
-        # Save the frame with detections
-        output_path = os.path.join(args.output_dir, f"frame_{frame_count:04d}.jpg")
-        cv2.imwrite(output_path, frame)
+    #     # Save the frame with detections
+    #     output_path = os.path.join(args.output_dir, f"frame_{frame_count:04d}.jpg")
+    #     cv2.imwrite(output_path, frame)
 
-        # Print information in the terminal
-        print(f"Frame {frame_count}: Saved to {output_path}")
-        if detections:
-            print("Detections:", ", ".join(detections))
-        else:
-            print("No detections in this frame")
-        print("-" * 50)
+    #     # Print information in the terminal
+    #     print(f"Frame {frame_count}: Saved to {output_path}")
+    #     if detections:
+    #         print("Detections:", ", ".join(detections))
+    #     else:
+    #         print("No detections in this frame")
+    #     print("-" * 50)
 
-        cv2.imshow('YOLO Detection', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    #     cv2.imshow('YOLO Detection', frame)
+    #     if cv2.waitKey(1) & 0xFF == ord('q'):
+    #         break
 
-    cap.release()
-    cv2.destroyAllWindows()
-    plugin.publish("log", f"Processing complete. {frame_count} frames saved in {args.output_dir}")
+    # cap.release()
+    # cv2.destroyAllWindows()
+    # plugin.publish("log", f"Processing complete. {frame_count} frames saved in {args.output_dir}")
 
 def parse_args():
     parser = argparse.ArgumentParser(description='YOLO v7 Detection')
