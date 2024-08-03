@@ -59,7 +59,7 @@ def run(args):
             yolov7_main = YOLOv7_Main(args, args.weight)
             logging.info("YOLOv7_Main object initialized successfully")
         except Exception as e:
-            logging.error(f"Error initializing YOLOv7_Main: {str(e)}")
+            logging.info(f"Error initializing YOLOv7_Main: {str(e)}")
             return
 
         logging.info(f'Model {args.weight} loaded')
