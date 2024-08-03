@@ -37,6 +37,7 @@ class YOLOv7_Main():
         self.model.eval()
 
     def pre_processing(self, frame):
+        logging.info("Pre-processing image")
         sized = cv2.resize(frame, (640, 640))
         image = sized / 255.0
         image = image.transpose((2, 0, 1))
@@ -44,6 +45,7 @@ class YOLOv7_Main():
         return image.unsqueeze(0)
 
     def inference(self, image):
+        logging.info("Inferencing")
         with torch.no_grad():
             return self.model(image)[0]
 
@@ -52,8 +54,11 @@ def run(args):
         classes = {0: 'fire', 1: 'smoke'}
         
         logging.info(f'Target objects: fire, smoke')
+        logging.info("before initializing model")
         yolov7_main = None
+        logging.info("initializing model")
         try: 
+          logging.info(f'Loading model {args.weight}')
           yolov7_main = YOLOv7_Main(args, args.weight)
         except:
           logging.error(f'Failed to load model {args.weight}')
