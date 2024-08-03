@@ -52,8 +52,13 @@ def run(args):
         classes = {0: 'fire', 1: 'smoke'}
         
         logging.info(f'Target objects: fire, smoke')
-        
-        yolov7_main = YOLOv7_Main(args, args.weight)
+        yolov7_main = None
+        try: 
+          yolov7_main = YOLOv7_Main(args, args.weight)
+        except:
+          logging.error(f'Failed to load model {args.weight}')
+          plugin.publish("env.model.loaded", f"Failed to load model {args.weight}")
+          return
         logging.info(f'Model {args.weight} loaded')
         plugin.publish("env.model.loaded", f"{args.weight} loaded")
         logging.info(f'Confidence threshold is set to {args.conf_thres}')
