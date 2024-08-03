@@ -1,35 +1,23 @@
 from __future__ import print_function
 
-import numpy as np
-import time
 import argparse
 import cv2
-import datetime
-import os
 import torch
 import torch.nn as nn
 import logging
 
 from models.experimental import Ensemble
-from models.common import Conv, DWConv
-from utils.general import non_max_suppression, apply_classifier
+from models.common import Conv
+from utils.general import non_max_suppression
 
 from waggle.plugin import Plugin
 from waggle.data.vision import Camera
 
-TOPIC_TEMPLATE = "env.count"
-
-def load_class_names(namesfile):
-    class_names = {}
-    with open(namesfile, 'r') as fp:
-        for index, class_name in enumerate(fp):
-            class_names[index] = class_name.strip()
-    return class_names
+TOPIC_TEMPLATE = "env.detection"
 
 class YOLOv7_Main():
     def __init__(self, args, weightfile):
-        self.use_cuda = torch.cuda.is_available()
-        self.device = 'cuda' if self.use_cuda else 'cpu'
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self.model = Ensemble()
         ckpt = torch.load(weightfile, map_location=self.device)
@@ -60,23 +48,20 @@ class YOLOv7_Main():
 
 def run(args):
     with Plugin() as plugin, Camera(args.stream) as camera:
-        classes_dict = load_class_names("coco.names")
-        target_objects = list(classes_dict.values()) if args.all_objects else (args.object or list(classes_dict.values()))
-        classes = [index for index, target in classes_dict.items() if target in target_objects]
+        classes = {0: 'fire', 1: 'smoke'}
         
-        logging.info(f'target objects: {" ".join(target_objects)}')
-        logging.debug(f'class numbers for target objects are {classes}')
+        logging.info(f'Target objects: fire, smoke')
         
         yolov7_main = YOLOv7_Main(args, args.weight)
-        logging.info(f'model {args.weight} loaded')
-        logging.info(f'cut-out confidence level is set to {args.conf_thres}')
-        logging.info(f'IOU level is set to {args.iou_thres}')
+        logging.info(f'Model {args.weight} loaded')
+        logging.info(f'Confidence threshold is set to {args.conf_thres}')
+        logging.info(f'IOU threshold is set to {args.iou_thres}')
         
         sampling_countdown = args.sampling_interval
         if args.sampling_interval >= 0:
-            logging.info(f'sampling enabled -- occurs every {args.sampling_interval}th inferencing')
+            logging.info(f'Sampling enabled -- occurs every {args.sampling_interval}th inferencing')
 
-        logging.info("object counter starts...")
+        logging.info("Fire and smoke detection starts...")
         for sample in camera.stream():
             do_sampling = sampling_countdown == 0
             if sampling_countdown > 0:
@@ -91,22 +76,20 @@ def run(args):
                 pred,
                 args.conf_thres,
                 args.iou_thres,
-                classes,
                 agnostic=True)[0]
 
-            found = {}
+            found = {'fire': 0, 'smoke': 0}
             w, h = frame.shape[1], frame.shape[0]
             for x1, y1, x2, y2, conf, cls in results:
-                object_label = classes_dict[int(cls)]
-                if object_label in target_objects:
-                    l, t, r, b = x1 * w/640, y1 * h/640, x2 * w/640, y2 * h/640
-                    rounded_conf = int(conf * 100)
-                    if do_sampling:
-                        frame = cv2.rectangle(frame, (int(l), int(t)), (int(r), int(b)), (255,0,0), 2)
-                        frame = cv2.putText(frame, f'{object_label}:{rounded_conf}%', (int(l), int(t)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0), 2)
-                    found[object_label] = found.get(object_label, 0) + 1
+                object_label = classes[int(cls)]
+                l, t, r, b = x1 * w/640, y1 * h/640, x2 * w/640, y2 * h/640
+                rounded_conf = int(conf * 100)
+                if do_sampling:
+                    frame = cv2.rectangle(frame, (int(l), int(t)), (int(r), int(b)), (255,0,0), 2)
+                    frame = cv2.putText(frame, f'{object_label}:{rounded_conf}%', (int(l), int(t)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0), 2)
+                found[object_label] += 1
 
-            detection_stats = 'found objects: ' + ' '.join(f'{obj} [{count}]' for obj, count in found.items())
+            detection_stats = 'Detected: ' + ' '.join(f'{obj} [{count}]' for obj, count in found.items())
             logging.info(detection_stats)
 
             for object_found, count in found.items():
@@ -116,17 +99,15 @@ def run(args):
                 sample.data = frame
                 sample.save('sample.jpg')
                 plugin.upload_file('sample.jpg', timestamp=sample.timestamp)
-                logging.info("uploaded sample")
+                logging.info("Uploaded sample")
 
             if not args.continuous:
                 break
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='YOLO v7 Detection')
+    parser = argparse.ArgumentParser(description='YOLO v7 Fire and Smoke Detection')
     parser.add_argument('-weight', type=str, default='yolov7-fire.pt', help='model.pt path(s)')
     parser.add_argument('-stream', type=str, default="camera", help='ID or name of a stream, e.g. sample')
-    parser.add_argument('-object', action='append', help='Object name to count')
-    parser.add_argument('-all-objects', action='store_true', default=False, help='Consider all registered objects to detect')
     parser.add_argument('-conf-thres', type=float, default=0.25, help='object confidence threshold')
     parser.add_argument('-iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
     parser.add_argument('-continuous', action='store_true', default=False, help='Flag to run this plugin forever')
