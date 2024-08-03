@@ -70,6 +70,7 @@ def run(args):
             elif sampling_countdown == 0:
                 sampling_countdown = args.sampling_interval
 
+            plugin.publish("env.detection.loop", "in detection loop")
             frame = sample.data
             image = yolov7_main.pre_processing(frame)
             pred = yolov7_main.inference(image)
