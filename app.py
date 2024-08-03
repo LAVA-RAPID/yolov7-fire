@@ -54,17 +54,14 @@ def run(args):
         classes = {0: 'fire', 1: 'smoke'}
         
         logging.info(f'Target objects: fire, smoke')
-        logging.info("before initializing model")
-        yolov7_main = None
-        logging.info("initializing model")
-        try: 
-          logging.info(f'Loading model {args.weight}')
-          yolov7_main = YOLOv7_Main(args, args.weight)
-          logging.info("Model loaded")
-        except:
-          logging.info(f'Failed to load model {args.weight}')
-          plugin.publish("env.model.loaded", f"Failed to load model {args.weight}")
-          return
+        
+        try:
+            yolov7_main = YOLOv7_Main(args, args.weight)
+            logging.info("YOLOv7_Main object initialized successfully")
+        except Exception as e:
+            logging.error(f"Error initializing YOLOv7_Main: {str(e)}")
+            return
+
         logging.info(f'Model {args.weight} loaded')
         plugin.publish("env.model.loaded", f"{args.weight} loaded")
         logging.info(f'Confidence threshold is set to {args.conf_thres}')
@@ -82,7 +79,6 @@ def run(args):
             elif sampling_countdown == 0:
                 sampling_countdown = args.sampling_interval
 
-            plugin.publish("env.detection.loop", "in detection loop")
             frame = sample.data
             image = yolov7_main.pre_processing(frame)
             pred = yolov7_main.inference(image)
