@@ -57,7 +57,8 @@ class YOLOv7_Main():
 def run(args):
   with Plugin() as plugin:
     plugin.publish("log", "Starting YOLOv7 Fire Detection")
-    plugin.publish("args", f"{args}")
+    plugin.publish("weight_args", f"{args.weight}")
+    plugin.publish("input_args", f"{args.input}")
     # yolo = YOLOv7_Main(args, args.weight)
 
     # if args.input.lower() == 'camera':
