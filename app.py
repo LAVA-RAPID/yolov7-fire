@@ -18,7 +18,9 @@ TOPIC_TEMPLATE = "env.detection"
 
 class YOLOv7_Main():
     def __init__(self, args, weightfile):
+        logging.info("Initializing YOLOv7_Main...")
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        logging.info(f"Device: {self.device}")
 
         self.model = Ensemble()
         ckpt = torch.load(weightfile, map_location=self.device)
