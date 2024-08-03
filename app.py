@@ -118,8 +118,8 @@ def parse_args():
     parser.add_argument('-conf-thres', type=float, default=0.25, help='object confidence threshold')
     parser.add_argument('-iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
     parser.add_argument('-continuous', action='store_true', default=True, help='Flag to run this plugin forever')
-    parser.add_argument('-sampling-interval', type=int, default=1, help='Sampling interval between inferencing')
-    parser.add_argument('-debug', action='store_true', default=False, help='Debug flag')
+    parser.add_argument('-sampling-interval', type=int, default=-1, help='Sampling interval between inferencing')
+    parser.add_argument('-debug', action='store_true', default=True, help='Debug flag')
     return parser.parse_args()
 
 if __name__ == '__main__':
