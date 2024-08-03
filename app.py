@@ -107,7 +107,7 @@ def run(args):
 def parse_args():
     parser = argparse.ArgumentParser(description='YOLO v7 Fire and Smoke Detection')
     parser.add_argument('-weight', type=str, default='yolov7-fire.pt', help='model.pt path(s)')
-    parser.add_argument('-stream', type=str, default="camera", help='ID or name of a stream, e.g. sample')
+    parser.add_argument('-stream', type=str, default="bottom_camera", help='ID or name of a stream, e.g. sample')
     parser.add_argument('-conf-thres', type=float, default=0.25, help='object confidence threshold')
     parser.add_argument('-iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
     parser.add_argument('-continuous', action='store_true', default=False, help='Flag to run this plugin forever')
