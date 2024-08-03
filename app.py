@@ -55,6 +55,7 @@ def run(args):
         
         yolov7_main = YOLOv7_Main(args, args.weight)
         logging.info(f'Model {args.weight} loaded')
+        plugin.publish("env.model.loaded", f"{args.weight} loaded")
         logging.info(f'Confidence threshold is set to {args.conf_thres}')
         logging.info(f'IOU threshold is set to {args.iou_thres}')
         
