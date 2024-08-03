@@ -60,8 +60,9 @@ def run(args):
         try: 
           logging.info(f'Loading model {args.weight}')
           yolov7_main = YOLOv7_Main(args, args.weight)
+          logging.info("Model loaded")
         except:
-          logging.error(f'Failed to load model {args.weight}')
+          logging.info(f'Failed to load model {args.weight}')
           plugin.publish("env.model.loaded", f"Failed to load model {args.weight}")
           return
         logging.info(f'Model {args.weight} loaded')
