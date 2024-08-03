@@ -5,6 +5,7 @@ import cv2
 import torch
 import torch.nn as nn
 import logging
+import json
 
 from models.experimental import Ensemble
 from models.common import Conv
@@ -72,6 +73,12 @@ def run(args):
             frame = sample.data
             image = yolov7_main.pre_processing(frame)
             pred = yolov7_main.inference(image)
+            
+            # Publish raw YOLO output
+            raw_output = pred[0].cpu().numpy().tolist()  # Convert to list for JSON serialization
+            plugin.publish('env.yolo.raw_output', json.dumps(raw_output), timestamp=sample.timestamp)
+            logging.info("Published raw YOLO output")
+
             results = non_max_suppression(
                 pred,
                 args.conf_thres,
