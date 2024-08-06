@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import logging
 import json
+import os
 
 from models.experimental import Ensemble
 from models.common import Conv
@@ -24,16 +25,16 @@ class YOLOv7_Main():
             self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
             logging.info(f"Using device: {self.device}")
 
+            logging.info("Creating Ensemble model...")
+            self.model = Ensemble()
+
             logging.info(f"Loading weight file: {weightfile}")
-            self.model = torch.load(weightfile, map_location=self.device)
+            ckpt = torch.load(weightfile, map_location=self.device)
             logging.info("Weight file loaded successfully")
 
-            if isinstance(self.model, dict):
-                logging.info("Extracting model from checkpoint")
-                self.model = self.model['ema' if self.model.get('ema') else 'model']
-
-            logging.info("Converting model to FP32 and fusing layers")
-            self.model = self.model.float().fuse().eval()
+            logging.info("Appending model to Ensemble...")
+            self.model.append(ckpt['ema' if ckpt.get('ema') else 'model'].float().fuse().eval())  # FP32 model
+            logging.info("Model appended successfully")
 
             logging.info("Performing compatibility updates...")
             for m in self.model.modules():
@@ -49,9 +50,13 @@ class YOLOv7_Main():
             self.model = self.model.half()
             logging.info("Model converted to half precision")
 
+            logging.info("Setting model to eval mode...")
+            self.model.eval()
+            logging.info("Model set to eval mode")
+
             logging.info("YOLOv7_Main initialization completed successfully")
         except Exception as e:
-            logging.error(f"Error during YOLOv7_Main initialization: {str(e)}")
+            logging.info(f"Error during YOLOv7_Main initialization: {str(e)}")
             raise
 
     def pre_processing(self, frame):
@@ -75,7 +80,7 @@ class YOLOv7_Main():
             logging.info("Pre-processing completed successfully")
             return image
         except Exception as e:
-            logging.error(f"Error during pre-processing: {str(e)}")
+            logging.info(f"Error during pre-processing: {str(e)}")
             raise
 
     def inference(self, image):
@@ -83,19 +88,34 @@ class YOLOv7_Main():
         try:
             logging.debug("Running model inference")
             with torch.no_grad():
-                pred = self.model(image)
+                pred = self.model(image)[0]
             
             logging.info("Inference completed successfully")
             return pred
         except Exception as e:
-            logging.error(f"Error during inference: {str(e)}")
+            logging.info(f"Error during inference: {str(e)}")
             raise
+          
+def list_directories_and_contents(path='.'):
+    for root, dirs, files in os.walk(path):
+        logging.info(f"Directory: {root}")
+        if dirs:
+            logging.info("Subdirectories:")
+            for dir in dirs:
+                logging.info(f"  {dir}")
+        if files:
+            logging.info("Files:")
+            for file in files:
+                logging.info(f"  {file}")
 
 def run(args):
     with Plugin() as plugin, Camera(args.stream) as camera:
         classes = {0: 'fire', 1: 'smoke'}
-        
         logging.info(f'Target objects: fire, smoke')
+        
+        logging.info("Listing directories and contents...")
+        list_directories_and_contents()
+        
         
         try:
             yolov7_main = YOLOv7_Main(args, args.weight)
