@@ -19,24 +19,24 @@ TOPIC_TEMPLATE = "env.detection"
 
 class YOLOv7_Main():
     def __init__(self, args, weightfile):
-        logging.info("Initializing YOLOv7_Main...")
+        logging.debug("Initializing YOLOv7_Main...")
         try:
-            logging.info(f"Checking device availability...")
+            logging.debug(f"Checking device availability...")
             self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-            logging.info(f"Using device: {self.device}")
+            logging.debug(f"Using device: {self.device}")
 
-            logging.info("Creating Ensemble model...")
+            logging.debug("Creating Ensemble model...")
             self.model = Ensemble()
 
-            logging.info(f"Loading weight file: {weightfile}")
+            logging.debug(f"Loading weight file: {weightfile}")
             ckpt = torch.load(weightfile, map_location=self.device)
-            logging.info("Weight file loaded successfully")
+            logging.debug("Weight file loaded successfully")
 
-            logging.info("Appending model to Ensemble...")
+            logging.debug("Appending model to Ensemble...")
             self.model.append(ckpt['ema' if ckpt.get('ema') else 'model'].float().fuse().eval())  # FP32 model
-            logging.info("Model appended successfully")
+            logging.debug("Model appended successfully")
 
-            logging.info("Performing compatibility updates...")
+            logging.debug("Performing compatibility updates...")
             for m in self.model.modules():
                 if type(m) in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU]:
                     m.inplace = True  # pytorch 1.7.0 compatibility
@@ -44,23 +44,23 @@ class YOLOv7_Main():
                     m.recompute_scale_factor = None  # torch 1.11.0 compatibility
                 elif type(m) is Conv:
                     m._non_persistent_buffers_set = set()  # pytorch 1.6.0 compatibility
-            logging.info("Compatibility updates completed")
+            logging.debug("Compatibility updates completed")
 
-            logging.info("Converting model to half precision...")
+            logging.debug("Converting model to half precision...")
             self.model = self.model.half()
-            logging.info("Model converted to half precision")
+            logging.debug("Model converted to half precision")
 
-            logging.info("Setting model to eval mode...")
+            logging.debug("Setting model to eval mode...")
             self.model.eval()
-            logging.info("Model set to eval mode")
+            logging.debug("Model set to eval mode")
 
-            logging.info("YOLOv7_Main initialization completed successfully")
+            logging.debug("YOLOv7_Main initialization completed successfully")
         except Exception as e:
-            logging.info(f"Error during YOLOv7_Main initialization: {str(e)}")
+            logging.debug(f"Error during YOLOv7_Main initialization: {str(e)}")
             raise
 
     def pre_processing(self, frame):
-        logging.info("Starting pre-processing of image")
+        logging.debug("Starting pre-processing of image")
         try:
             logging.debug("Resizing image to 640x640")
             sized = cv2.resize(frame, (640, 640))
@@ -77,63 +77,63 @@ class YOLOv7_Main():
             logging.debug("Adding batch dimension to tensor")
             image = image.unsqueeze(0)
             
-            logging.info("Pre-processing completed successfully")
+            logging.debug("Pre-processing completed successfully")
             return image
         except Exception as e:
-            logging.info(f"Error during pre-processing: {str(e)}")
+            logging.debug(f"Error during pre-processing: {str(e)}")
             raise
 
     def inference(self, image):
-        logging.info("Starting inference")
+        logging.debug("Starting inference")
         try:
             logging.debug("Running model inference")
             with torch.no_grad():
                 pred = self.model(image)[0]
             
-            logging.info("Inference completed successfully")
+            logging.debug("Inference completed successfully")
             return pred
         except Exception as e:
-            logging.info(f"Error during inference: {str(e)}")
+            logging.debug(f"Error during inference: {str(e)}")
             raise
           
 def list_directories_and_contents(path='.'):
     for root, dirs, files in os.walk(path):
-        logging.info(f"Directory: {root}")
+        logging.debug(f"Directory: {root}")
         if dirs:
-            logging.info("Subdirectories:")
+            logging.debug("Subdirectories:")
             for dir in dirs:
-                logging.info(f"  {dir}")
+                logging.debug(f"  {dir}")
         if files:
-            logging.info("Files:")
+            logging.debug("Files:")
             for file in files:
-                logging.info(f"  {file}")
+                logging.debug(f"  {file}")
 
 def run(args):
     with Plugin() as plugin, Camera(args.stream) as camera:
         classes = {0: 'fire', 1: 'smoke'}
-        logging.info(f'Target objects: fire, smoke')
+        logging.debug(f'Target objects: fire, smoke')
         
-        logging.info("Listing directories and contents...")
+        logging.debug("Listing directories and contents...")
         list_directories_and_contents()
         
         
         try:
             yolov7_main = YOLOv7_Main(args, args.weight)
-            logging.info("YOLOv7_Main object initialized successfully")
+            logging.debug("YOLOv7_Main object initialized successfully")
         except Exception as e:
-            logging.info(f"Error initializing YOLOv7_Main: {str(e)}")
+            logging.debug(f"Error initializing YOLOv7_Main: {str(e)}")
             return
 
-        logging.info(f'Model {args.weight} loaded')
+        logging.debug(f'Model {args.weight} loaded')
         plugin.publish("env.model.loaded", f"{args.weight} loaded")
-        logging.info(f'Confidence threshold is set to {args.conf_thres}')
-        logging.info(f'IOU threshold is set to {args.iou_thres}')
+        logging.debug(f'Confidence threshold is set to {args.conf_thres}')
+        logging.debug(f'IOU threshold is set to {args.iou_thres}')
         
         sampling_countdown = args.sampling_interval
         if args.sampling_interval >= 0:
-            logging.info(f'Sampling enabled -- occurs every {args.sampling_interval}th inferencing')
+            logging.debug(f'Sampling enabled -- occurs every {args.sampling_interval}th inferencing')
 
-        logging.info("Fire and smoke detection starts...")
+        logging.debug("Fire and smoke detection starts...")
         for sample in camera.stream():
             do_sampling = sampling_countdown == 0
             if sampling_countdown > 0:
@@ -148,7 +148,7 @@ def run(args):
             # Publish raw YOLO output
             # raw_output = pred[0].cpu().numpy().tolist()  # Convert to list for JSON serialization
             # plugin.publish('env.yolo.raw_output', json.dumps(raw_output), timestamp=sample.timestamp)
-            # logging.info("Published raw YOLO output")
+            # logging.debug("Published raw YOLO output")
 
             results = non_max_suppression(
                 pred,
@@ -177,10 +177,10 @@ def run(args):
                 sample.data = frame
                 sample.save('sample.jpg')
                 plugin.upload_file('sample.jpg', timestamp=sample.timestamp)
-                logging.info("Uploaded sample")
+                logging.debug("Uploaded sample")
 
             if not args.continuous:
-                exit(0)
+                break
 
 def parse_args():
     parser = argparse.ArgumentParser(description='YOLO v7 Fire and Smoke Detection')
