@@ -146,9 +146,9 @@ def run(args):
             pred = yolov7_main.inference(image)
             
             # Publish raw YOLO output
-            raw_output = pred[0].cpu().numpy().tolist()  # Convert to list for JSON serialization
-            plugin.publish('env.yolo.raw_output', json.dumps(raw_output), timestamp=sample.timestamp)
-            logging.info("Published raw YOLO output")
+            # raw_output = pred[0].cpu().numpy().tolist()  # Convert to list for JSON serialization
+            # plugin.publish('env.yolo.raw_output', json.dumps(raw_output), timestamp=sample.timestamp)
+            # logging.info("Published raw YOLO output")
 
             results = non_max_suppression(
                 pred,
@@ -180,7 +180,7 @@ def run(args):
                 logging.info("Uploaded sample")
 
             if not args.continuous:
-                break
+                exit(0)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='YOLO v7 Fire and Smoke Detection')
