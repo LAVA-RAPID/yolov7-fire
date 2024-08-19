@@ -72,7 +72,7 @@ class YOLOv7_Main():
             image = image.transpose((2, 0, 1))
             
             logging.debug("Converting image to PyTorch tensor")
-            image = torch.from_numpy(image).to(self.device).half()
+            image = torch.from_numpy(image).to(self.device).half() # converts from fp32 to fp16, doesn't affect performance of model much but lowers memory usage
             
             logging.debug("Adding batch dimension to tensor")
             image = image.unsqueeze(0)
@@ -116,7 +116,6 @@ def run(args):
         logging.debug("Listing directories and contents...")
         list_directories_and_contents()
         
-        
         try:
             yolov7_main = YOLOv7_Main(args, args.weight)
             logging.debug("YOLOv7_Main object initialized successfully")
@@ -144,11 +143,6 @@ def run(args):
             frame = sample.data
             image = yolov7_main.pre_processing(frame)
             pred = yolov7_main.inference(image)
-            
-            # Publish raw YOLO output
-            # raw_output = pred[0].cpu().numpy().tolist()  # Convert to list for JSON serialization
-            # plugin.publish('env.yolo.raw_output', json.dumps(raw_output), timestamp=sample.timestamp)
-            # logging.debug("Published raw YOLO output")
 
             results = non_max_suppression(
                 pred,
@@ -170,8 +164,10 @@ def run(args):
             detection_stats = 'Detected: ' + ' '.join(f'{obj} [{count}]' for obj, count in found.items())
             logging.info(detection_stats)
 
-            for object_found, count in found.items():
-                plugin.publish(f'{TOPIC_TEMPLATE}.{object_found}', count, timestamp=sample.timestamp)
+            # for object_found, count in found.items():
+            #     plugin.publish(f'{TOPIC_TEMPLATE}.{object_found}', count, timestamp=sample.timestamp)
+                
+            plugin.publish(f'{TOPIC_TEMPLATE}', json.dumps(found), timestamp=sample.timestamp)
 
             if do_sampling:
                 sample.data = frame
@@ -185,8 +181,8 @@ def run(args):
 def parse_args():
     parser = argparse.ArgumentParser(description='YOLO v7 Fire and Smoke Detection')
     parser.add_argument('-weight', type=str, default='yolov7-fire.pt', help='model.pt path(s)')
-    parser.add_argument('-stream', type=str, default="bottom_camera", help='ID or name of a stream, e.g. sample')
-    parser.add_argument('-conf-thres', type=float, default=0.25, help='object confidence threshold')
+    parser.add_argument('-stream', type=str, default="bottom_camera", help='ID or name of a stream, e.g. bottom_camera')
+    parser.add_argument('-conf-thres', type=float, default=0.40, help='object confidence threshold')
     parser.add_argument('-iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
     parser.add_argument('-continuous', action='store_true', default=False, help='Flag to run this plugin forever')
     parser.add_argument('-sampling-interval', type=int, default=-1, help='Sampling interval between inferencing')
