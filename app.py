@@ -134,10 +134,11 @@ def run(args):
 
         logging.debug("Fire and smoke detection starts...")
         for sample in camera.stream():
-            do_sampling = sampling_countdown == 0
+            do_sampling = False
             if sampling_countdown > 0:
                 sampling_countdown -= 1
             elif sampling_countdown == 0:
+                do_sampling = True
                 sampling_countdown = args.sampling_interval
 
             frame = sample.data
@@ -176,7 +177,7 @@ def run(args):
                 logging.debug("Uploaded sample")
 
             if not args.continuous:
-                break
+                exit(0)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='YOLO v7 Fire and Smoke Detection')
