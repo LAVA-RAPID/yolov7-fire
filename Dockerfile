@@ -15,7 +15,7 @@
 FROM waggle/plugin-base:1.1.1-ml-torch1.9
 
 RUN apt-get update \
-  && apt-get install -y \
+  && apt-get install -y wget\
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
