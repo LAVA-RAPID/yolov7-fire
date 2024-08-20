@@ -6,7 +6,7 @@ authors: "Giorgio Tran"
 collaborators: ""
 funding: ""
 license: ""
-homepage: ""
+homepage: "https://github.com/LAVA-RAPID/yolov7-fire/tree/main"
 source:
   architectures:
     - "linux/amd64"
