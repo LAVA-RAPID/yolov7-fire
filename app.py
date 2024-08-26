@@ -135,7 +135,7 @@ def process_frame(frame, yolov7_main, plugin, args, classes, do_sampling=False, 
 
     plugin.publish(f'{TOPIC_TEMPLATE}', json.dumps(found), timestamp=timestamp)
 
-    if do_sampling or args.testing:
+    if do_sampling or args.testmodel:
         cv2.imwrite('sample.jpg', frame)
         plugin.upload_file('sample.jpg', timestamp=timestamp)
         logging.debug("Uploaded sample")
@@ -160,7 +160,7 @@ def run(args):
         logging.debug(f'Confidence threshold is set to {args.conf_thres}')
         logging.debug(f'IOU threshold is set to {args.iou_thres}')
 
-        if args.testing:
+        if args.testmodel:
             # Test mode: read a single image
             logging.debug("Running in test mode with a single image")
             frame = cv2.imread('./test/test.jpg')  # Replace with your test image path
@@ -200,7 +200,7 @@ def parse_args():
     parser.add_argument('-continuous', action='store_true', default=False, help='Flag to run this plugin forever')
     parser.add_argument('-sampling-interval', type=int, default=-1, help='Sampling interval between inferencing')
     parser.add_argument('-debug', action='store_true', default=False, help='Debug flag')
-    parser.add_argument('-testing', action='store_true', default=False, help='Test with a fire image.')
+    parser.add_argument('-testmodel', action='store_true', default=False, help='Test with a fire image.')
     return parser.parse_args()
 
 if __name__ == '__main__':
