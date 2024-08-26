@@ -124,7 +124,7 @@ def process_frame(frame, yolov7_main, plugin, args, classes, do_sampling=False, 
         object_label = classes[int(cls)]
         l, t, r, b = x1 * w/640, y1 * h/640, x2 * w/640, y2 * h/640
         rounded_conf = int(conf * 100)
-        if do_sampling:
+        if do_sampling or args.testing:
             frame = cv2.rectangle(frame, (int(l), int(t)), (int(r), int(b)), (255,0,0), 2)
             frame = cv2.putText(frame, f'{object_label}:{rounded_conf}%', (int(l), int(t)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0), 2)
         found[object_label] += 1
