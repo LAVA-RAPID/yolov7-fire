@@ -33,7 +33,7 @@ inputs:
   - id: "-continuous"
     type: "bool"
     description: "Flag to run plugin continuously."
-    default: false
+    default: "false"
   - id: "-sampling-interval":
     type: "int"
     description: "Image sampling interval between inferencing."
@@ -41,8 +41,8 @@ inputs:
   - id: "-debug"
     type: "bool"
     description: "Flag to enable debug mode."
-    default: false
+    default: "false"
   - id: "-test"
     type: "bool"
     description: "Flag to enable test mode."
-    default: false
+    default: "false"
