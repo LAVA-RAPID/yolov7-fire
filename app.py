@@ -141,7 +141,7 @@ def process_frame(frame, yolov7_main, plugin, args, classes, do_sampling=False, 
         logging.debug("Uploaded sample")
 
 def run(args):
-    with Plugin() as plugin:
+    with Plugin() as plugin, Camera(args.stream) as camera:
         classes = {0: 'fire', 1: 'smoke'}
         logging.debug(f'Target objects: fire, smoke')
 
@@ -169,27 +169,25 @@ def run(args):
                 return
             process_frame(frame, yolov7_main, plugin, args, classes)
         else:
-            # Normal mode: use camera stream
-            with Camera(args.stream) as camera:
-                sampling_countdown = args.sampling_interval
-                if args.sampling_interval >= 0:
-                    logging.debug(f'Sampling enabled -- occurs every {args.sampling_interval}th inferencing')
+            sampling_countdown = args.sampling_interval
+            if args.sampling_interval >= 0:
+                logging.debug(f'Sampling enabled -- occurs every {args.sampling_interval}th inferencing')
 
-                logging.debug("Fire and smoke detection starts...")
-                
-                for sample in camera.stream():
-                    do_sampling = False
-                    if sampling_countdown > 0:
-                        sampling_countdown -= 1
-                    elif sampling_countdown == 0:
-                        do_sampling = True
-                        sampling_countdown = args.sampling_interval
+            logging.debug("Fire and smoke detection starts...")
+            
+            for sample in camera.stream():
+                do_sampling = False
+                if sampling_countdown > 0:
+                    sampling_countdown -= 1
+                elif sampling_countdown == 0:
+                    do_sampling = True
+                    sampling_countdown = args.sampling_interval
 
-                    frame = sample.data
-                    process_frame(frame, yolov7_main, plugin, args, classes, do_sampling, sample.timestamp)
+                frame = sample.data
+                process_frame(frame, yolov7_main, plugin, args, classes, do_sampling, sample.timestamp)
 
-                    if not args.continuous:
-                        break
+                if not args.continuous:
+                    break
 
 def parse_args():
     parser = argparse.ArgumentParser(description='YOLO v7 Fire and Smoke Detection')
