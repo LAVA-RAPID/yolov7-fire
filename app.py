@@ -29,6 +29,7 @@ class YOLOv7_Main():
             self.model = Ensemble()
 
             logging.debug(f"Loading weight file: {weightfile}")
+            plugin.publish("env.debug", f"Loading weight file: {weightfile}")
             ckpt = torch.load(weightfile, map_location=self.device)
             logging.debug("Weight file loaded successfully")
 
@@ -108,14 +109,45 @@ def list_directories_and_contents(path='.'):
             for file in files:
                 logging.debug(f"  {file}")
 
+def process_frame(frame, yolov7_main, plugin, args, classes, do_sampling=False, timestamp=None):
+    image = yolov7_main.pre_processing(frame)
+    pred = yolov7_main.inference(image)
+
+    results = non_max_suppression(
+        pred,
+        args.conf_thres,
+        args.iou_thres,
+        agnostic=True)[0]
+
+    found = {'fire': 0, 'smoke': 0}
+    w, h = frame.shape[1], frame.shape[0]
+    for x1, y1, x2, y2, conf, cls in results:
+        object_label = classes[int(cls)]
+        l, t, r, b = x1 * w/640, y1 * h/640, x2 * w/640, y2 * h/640
+        rounded_conf = int(conf * 100)
+        if do_sampling:
+            frame = cv2.rectangle(frame, (int(l), int(t)), (int(r), int(b)), (255,0,0), 2)
+            frame = cv2.putText(frame, f'{object_label}:{rounded_conf}%', (int(l), int(t)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0), 2)
+        found[object_label] += 1
+
+    detection_stats = 'Detected: ' + ' '.join(f'{obj} [{count}]' for obj, count in found.items())
+    logging.info(detection_stats)
+
+    plugin.publish(f'{TOPIC_TEMPLATE}', json.dumps(found), timestamp=timestamp)
+
+    if do_sampling or args.test:
+        cv2.imwrite('sample.jpg', frame)
+        plugin.upload_file('sample.jpg', timestamp=timestamp)
+        logging.debug("Uploaded sample")
+
 def run(args):
-    with Plugin() as plugin, Camera(args.stream) as camera:
+    with Plugin() as plugin:
         classes = {0: 'fire', 1: 'smoke'}
         logging.debug(f'Target objects: fire, smoke')
-        
+
         logging.debug("Listing directories and contents...")
         list_directories_and_contents()
-        
+
         try:
             yolov7_main = YOLOv7_Main(args, args.weight)
             logging.debug("YOLOv7_Main object initialized successfully")
@@ -127,57 +159,37 @@ def run(args):
         plugin.publish("env.model.loaded", f"{args.weight} loaded")
         logging.debug(f'Confidence threshold is set to {args.conf_thres}')
         logging.debug(f'IOU threshold is set to {args.iou_thres}')
-        
-        sampling_countdown = args.sampling_interval
-        if args.sampling_interval >= 0:
-            logging.debug(f'Sampling enabled -- occurs every {args.sampling_interval}th inferencing')
 
-        logging.debug("Fire and smoke detection starts...")
-        for sample in camera.stream():
-            do_sampling = False
-            if sampling_countdown > 0:
-                sampling_countdown -= 1
-            elif sampling_countdown == 0:
-                do_sampling = True
+        if args.test:
+            # Test mode: read a single image
+            logging.debug("Running in test mode with a single image")
+            frame = cv2.imread('./test/test.jpg')  # Replace with your test image path
+            if frame is None:
+                logging.error("Failed to load test image")
+                return
+            process_frame(frame, yolov7_main, plugin, args, classes)
+        else:
+            # Normal mode: use camera stream
+            with Camera(args.stream) as camera:
                 sampling_countdown = args.sampling_interval
+                if args.sampling_interval >= 0:
+                    logging.debug(f'Sampling enabled -- occurs every {args.sampling_interval}th inferencing')
 
-            frame = sample.data
-            image = yolov7_main.pre_processing(frame)
-            pred = yolov7_main.inference(image)
-
-            results = non_max_suppression(
-                pred,
-                args.conf_thres,
-                args.iou_thres,
-                agnostic=True)[0]
-
-            found = {'fire': 0, 'smoke': 0}
-            w, h = frame.shape[1], frame.shape[0]
-            for x1, y1, x2, y2, conf, cls in results:
-                object_label = classes[int(cls)]
-                l, t, r, b = x1 * w/640, y1 * h/640, x2 * w/640, y2 * h/640
-                rounded_conf = int(conf * 100)
-                if do_sampling:
-                    frame = cv2.rectangle(frame, (int(l), int(t)), (int(r), int(b)), (255,0,0), 2)
-                    frame = cv2.putText(frame, f'{object_label}:{rounded_conf}%', (int(l), int(t)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0), 2)
-                found[object_label] += 1
-
-            detection_stats = 'Detected: ' + ' '.join(f'{obj} [{count}]' for obj, count in found.items())
-            logging.info(detection_stats)
-
-            # for object_found, count in found.items():
-            #     plugin.publish(f'{TOPIC_TEMPLATE}.{object_found}', count, timestamp=sample.timestamp)
+                logging.debug("Fire and smoke detection starts...")
                 
-            plugin.publish(f'{TOPIC_TEMPLATE}', json.dumps(found), timestamp=sample.timestamp)
+                for sample in camera.stream():
+                    do_sampling = False
+                    if sampling_countdown > 0:
+                        sampling_countdown -= 1
+                    elif sampling_countdown == 0:
+                        do_sampling = True
+                        sampling_countdown = args.sampling_interval
 
-            if do_sampling:
-                sample.data = frame
-                sample.save('sample.jpg')
-                plugin.upload_file('sample.jpg', timestamp=sample.timestamp)
-                logging.debug("Uploaded sample")
+                    frame = sample.data
+                    process_frame(frame, yolov7_main, plugin, args, classes, do_sampling, sample.timestamp)
 
-            if not args.continuous:
-                exit(0)
+                    if not args.continuous:
+                        break
 
 def parse_args():
     parser = argparse.ArgumentParser(description='YOLO v7 Fire and Smoke Detection')
@@ -187,7 +199,8 @@ def parse_args():
     parser.add_argument('-iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
     parser.add_argument('-continuous', action='store_true', default=False, help='Flag to run this plugin forever')
     parser.add_argument('-sampling-interval', type=int, default=-1, help='Sampling interval between inferencing')
-    parser.add_argument('-debug', action='store_true', default=True, help='Debug flag')
+    parser.add_argument('-debug', action='store_true', default=False, help='Debug flag')
+    parser.add_argument('-test', action='store_true', default=False, help='Test with a fire image.')
     return parser.parse_args()
 
 if __name__ == '__main__':
