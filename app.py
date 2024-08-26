@@ -29,7 +29,6 @@ class YOLOv7_Main():
             self.model = Ensemble()
 
             logging.debug(f"Loading weight file: {weightfile}")
-            plugin.publish("env.debug", f"Loading weight file: {weightfile}")
             ckpt = torch.load(weightfile, map_location=self.device)
             logging.debug("Weight file loaded successfully")
 
