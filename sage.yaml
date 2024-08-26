@@ -11,5 +11,3 @@ source:
   architectures:
     - "linux/amd64"
     - "linux/arm64"
-  url: "https://github.com/LAVA-RAPID/yolov7-fire"
-  branch: "main"
