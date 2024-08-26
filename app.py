@@ -141,7 +141,7 @@ def process_frame(frame, yolov7_main, plugin, args, classes, do_sampling=False, 
 
 def run(args):
     with Plugin() as plugin, Camera(args.stream) as camera:
-        classes = {0: 'fire', 1: 'smoke'}
+        classes = {0: 'smoke', 1: 'fire'}
         logging.debug(f'Target objects: fire, smoke')
 
         logging.debug("Listing directories and contents...")
