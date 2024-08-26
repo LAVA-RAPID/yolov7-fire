@@ -24,7 +24,7 @@ YOLOv7-Fire is a fire detection model based on YOLOv7. It is finetuned on the [D
 
 ## Data Fetching
 
-Data can be obtained from `env.detection`, which shows `{fire: <count>, smoke: <count>}`.
+Data can be obtained from `env.detection`, which shows `{fire: count as int, smoke: count as int}`.
 
 
 
