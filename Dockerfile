@@ -24,6 +24,7 @@ RUN pip3 install --upgrade pip
 COPY requirements.txt /app/
 RUN pip3 install --no-cache-dir --upgrade -r /app/requirements.txt
 
+COPY test/ /app/test
 COPY utils/ /app/utils
 COPY models/ /app/models
 COPY app.py /app/
