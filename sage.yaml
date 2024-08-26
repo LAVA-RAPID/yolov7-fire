@@ -7,23 +7,6 @@ collaborators: ""
 funding: ""
 license: ""
 homepage: "https://github.com/LAVA-RAPID/yolov7-fire/tree/main"
-inputs:
-  - id: "-weight"
-    type: "string"
-  - id: "-stream"
-    type: "string"
-  - id: "-conf-thres"
-    type: "float"
-  - id: "-iou-thres"
-    type: "float"
-  - id: "-continuous"
-    type: "bool"
-  - id: "-sampling-interval":
-    type: "int"
-  - id: "-debug"
-    type: "bool"
-  - id: "-test"
-    type: "bool"
 source:
   architectures:
     - "linux/amd64"
