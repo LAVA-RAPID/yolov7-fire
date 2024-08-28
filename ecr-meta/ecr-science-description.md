@@ -27,7 +27,8 @@ YOLOv7-Fire is a fire detection model based on YOLOv7. It is finetuned on the [D
 Data can be obtained from `env.detection`, which shows `{fire: count as int, smoke: count as int}`.
 
 ## Versions
-
+- 0.1.5: When uploading the image, use BRG to RGB because by default CV2 reads the image in BGR format.
+- 0.1.4: Fire and smoke were flipped, fixed.
 - 0.1.3: Add testing flag (use test image to ensure that the model is working)
 - 0.1.2: Doesn't work
 - 0.1.1: Doesn't work
