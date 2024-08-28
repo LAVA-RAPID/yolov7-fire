@@ -135,7 +135,8 @@ def process_frame(frame, yolov7_main, plugin, args, classes, do_sampling=False, 
     plugin.publish(f'{TOPIC_TEMPLATE}', json.dumps(found), timestamp=timestamp)
 
     if do_sampling or args.testing:
-        cv2.imwrite('sample.jpg', frame)
+        rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        cv2.imwrite('sample.jpg', rgb_image)
         plugin.upload_file('sample.jpg', timestamp=timestamp)
         logging.debug("Uploaded sample")
 
