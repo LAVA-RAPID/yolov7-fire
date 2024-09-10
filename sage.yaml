@@ -5,7 +5,7 @@ keywords: "fire-detection"
 authors: "Giorgio Tran, Christopher Lee, Jason Leigh"
 collaborators: "Laboratory for Advanced Visualization and Applications, Argonne National Laboratory"
 funding: "RAPID Award NSF 2346568"
-license: ""
+license: "MIT"
 homepage: "https://github.com/LAVA-RAPID/yolov7-fire/tree/main"
 source:
   architectures:
